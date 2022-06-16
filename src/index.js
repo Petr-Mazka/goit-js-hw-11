@@ -1,90 +1,85 @@
 import axios from 'axios';
 import Notiflix from 'notiflix';
-
-const refs = {
-    inputForm: document.querySelector('#search-form'),
-    inputField: document.querySelector('input'),
-    searchButton: document.querySelector('button'),
-    galleryItems: document.querySelector('.gallery'),
-    continuouButton: document.querySelector('.load-more'),
-  };
+import { refs } from './refs.js';
   
+
+// Ключи для получения доступа к API и первая страница
   const API = 'https://pixabay.com/api';
   const API_KEY = '28070761-d620d5c137a0a40b3f0efb4d6';
-  const IMAGE_TYPE = 'photo';
-  const ORIENTATION = 'horizontal';
-  const SAFE_SEARCH = true;
   const PER_PAGE = 40;
   let page = 1;
   
-  function checkingPage() {
+
+// Функция для кнопки "Показать еще". При странице "1" прячет кнопку.
+  function mainPage() {
     if (page === 1) {
-      refs.continuouButton.classList.add('hidden');
+      refs.continueButton.classList.add('is-hidden');
     }
   }
   
-  checkingPage();
+  mainPage();
   
-  refs.inputForm.addEventListener('submit', showImages);
-  refs.continuouButton.addEventListener('click', addingNewImages);
+
+// Слушатель на кнопку "Показать еще" и кнопку "Найти"
+  refs.mainForm.addEventListener('submit', addGallery);
+  refs.continueButton.addEventListener('click', loadMore);
   
-  function showImages(event) {
-    if (!refs.continuouButton.classList.contains('hidden') && page > 1) {
-      refs.continuouButton.classList.add('hidden');
-      // console.log(refs.continuouButton);
+
+// Функция для слушателя на кнопку "Найти"
+  function addGallery(event) {
+    if (!refs.continueButton.classList.contains('is-hidden') && page > 1) {
+      refs.continueButton.classList.add('is-hidden');
     }
   
     resetPageCount();
-  
     clearMarkup();
-    gettingImages(event);
+    getImages(event);
   }
   
-  function addingNewImages(event) {
-    gettingImages(event);
+
+// Функция для слушателя на кнопку "Показать еще"
+  function loadMore(event) {
+    getImages(event);
   }
   
-  function gettingImages(event) {
+
+// Получение картинок
+  function getImages(event) {
     event.preventDefault();
   
-    const requestValue = refs.inputField.value;
+    const requestValue = refs.input.value;
   
-    getDatas(requestValue)
+    getData(requestValue)
       .then(response => {
-        receivedDatas(response);
+        data(response);
       })
       .catch(error => console.log(error.message));
   }
   
-  function receivedDatas(response) {
-    // const countImages = response.data.hits.length;
-    const picturesArray = response.data.hits;
-  
-    renderGallery(picturesArray);
-    pageScroll();
-    // console.log(response);
+  function data(response) {
+    const pics = response.data.hits;
+    renderGallery(pics);
   }
   
   const axios = require('axios');
   
-  async function getDatas(searchword) {
-    const wordForSearch = searchword.trim();
-    console.log(wordForSearch);
+  async function getData(searchword) {
+    const search = searchword.trim();
     try {
-      if (wordForSearch === '') {
+      if (search === '') {
         Notiflix.Notify.warning('Please type in the field what you want to find');
         clearMarkup();
         return;
       }
       const response = await axios.get(
-        `${API}/?key=${API_KEY}&q=${wordForSearch}&image_type=${IMAGE_TYPE}&orientation=${ORIENTATION}&safesearch=${SAFE_SEARCH}&page=${page}&per_page=${PER_PAGE}`
+        `${API}/?key=${API_KEY}&q=${search}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${PER_PAGE}`
       );
   
       if (page === 1 && response.data.totalHits > 0) {
         Notiflix.Notify.success(
           `Hooray! We found ${response.data.totalHits} images`
         );
-        refs.continuouButton.classList.remove('hidden');
+        refs.continueButton.classList.remove('is-hidden');
       }
   
       if (
@@ -94,7 +89,7 @@ const refs = {
         Notiflix.Notify.warning(
           'We have already reached the end of the collection'
         );
-        refs.continuouButton.classList.add('hidden');
+        refs.continueButton.classList.add('is-hidden');
       }
   
       if (response.data.hits.length === 0) {
@@ -103,23 +98,24 @@ const refs = {
         );
         return;
       }
-      console.log(page);
-      console.log(response.data.totalHits / PER_PAGE);
   
       page += 1;
-      // console.log(response);
       return response;
     } catch (error) {
       console.error(error);
     }
   }
   
+
+// Функция для сброса счетчика страниц
   function resetPageCount() {
     page = 1;
   }
-  
+
+
+// Рэндеринг картинок(галереи)
   function renderGallery(pictureArray) {
-    const cardMarkup = pictureArray
+    const imgMarkup = pictureArray
       .map(
         ({
           webformatURL,
@@ -153,11 +149,11 @@ const refs = {
         }
       )
       .join('');
-  
-    //   console.log(cardMarkup);
-    refs.galleryItems.insertAdjacentHTML('beforeend', cardMarkup);
+    refs.gallery.insertAdjacentHTML('beforeend', imgMarkup);
   }
-  
+
+
+// Очистка галереи
   function clearMarkup() {
-    refs.galleryItems.innerHTML = '';
+    refs.gallery.innerHTML = '';
   }
