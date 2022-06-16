@@ -121,3 +121,12 @@ img {
     border-radius: 5px;
     cursor: pointer;
   }
+
+  .search-button:hover,
+  .search-button:focus {
+    border: #cb69c1 3px solid;
+  }
+
+  .main-input:focus {
+    border: #cb69c1 3px solid;
+  }
